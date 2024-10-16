@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include "draw.h"
+#include "test.h"
 
 // Global window dimensions
 int windowWidth = 800;
@@ -13,7 +14,7 @@ void ShutDown(SDL_Window *window, SDL_Renderer *renderer);
 void Loop(SDL_Renderer *renderer);
 SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height);
 
-// Main function
+// Main function to initialize, run the loop, and clean up
 int main(int argc, char *argv[]) {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
@@ -23,8 +24,9 @@ int main(int argc, char *argv[]) {
 
     // Main application loop
     Loop(renderer);
+    // test(renderer);  // Uncomment if you want to run test functionality
 
-    // Cleanup and shutdown
+    // Clean up and shut down SDL
     ShutDown(window, renderer);
 
     return 0;
@@ -37,6 +39,7 @@ bool Init(SDL_Window **window, SDL_Renderer **renderer) {
         return false;
     }
 
+    // Create window with specified dimensions
     *window = SDL_CreateWindow("My Paint", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (!*window) {
@@ -45,6 +48,7 @@ bool Init(SDL_Window **window, SDL_Renderer **renderer) {
         return false;
     }
 
+    // Create renderer for the window with hardware acceleration and VSync
     *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!*renderer) {
         printf("Renderer creation failed. Error: %s\n", SDL_GetError());
@@ -71,6 +75,7 @@ SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height) {
         return NULL;
     }
 
+    // Clear the texture to a white background
     SDL_SetRenderTarget(renderer, texture);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // White background
     SDL_RenderClear(renderer);
@@ -88,20 +93,20 @@ void Loop(SDL_Renderer *renderer) {
 
     // Create texture for saving the drawing state
     savedBuffer = CreateClearTexture(renderer, windowWidth, windowHeight);
-    if (!savedBuffer) return;  // If texture creation failed, exit the loop
+    if (!savedBuffer) return;  // Exit if texture creation fails
 
     // Render the cleared texture onto the screen
     SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
     SDL_RenderPresent(renderer);
 
-    bool down = false;  // Keeps track if the mouse button is held down
+    bool down = false;  // Tracks whether the mouse button is held down
     SHAPE_DATA data;
 
-    // Event loop to process input
+    // Event loop to process user input
     while (running) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_QUIT:  // Handle window close event
+                case SDL_QUIT:  // Quit the application
                     running = false;
                     break;
                 case SDL_KEYDOWN:  // Handle keyboard input
@@ -120,52 +125,31 @@ void Loop(SDL_Renderer *renderer) {
                             break;
                     }
                     break;
-                case SDL_MOUSEBUTTONDOWN:  // Handle mouse button press
-                    switch (shape) {
-                        case POINT:  // Draw a point at the mouse position
-                            data.point.startX = event.button.x;
-                            data.point.startY = event.button.y;
-                            break;
-                        case LINE:  // Start drawing a line
-                            down = true;
-                            data.line.startX = event.button.x;
-                            data.line.startY = event.button.y;
-                            break;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONUP:  // Handle mouse button release
-                    if (shape == LINE && down) {
-                        down = false;  // Stop drawing the line
-                        data.line.endX = event.button.x;
-                        data.line.endY = event.button.y;
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:
+                    if (updateData(shape, &data, event)) {
+                        // Draw on savedBuffer texture
+                        SDL_SetRenderTarget(renderer, savedBuffer);
                         draw(renderer, shape, &data);
-                    }
-                    // Save the drawn line to the texture
-                    SDL_SetRenderTarget(renderer, savedBuffer);
-                    draw(renderer, shape, &data);
-                    SDL_SetRenderTarget(renderer, NULL);
 
-                    // Copy the texture to the screen
-                    SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-                    SDL_RenderPresent(renderer);
-                    break;
-                case SDL_MOUSEMOTION:  // Handle mouse movement
-                    if (shape == LINE && down) {  // If drawing a line
-                        // Restore previous frame
+                        // Render savedBuffer with the new shape
+                        SDL_SetRenderTarget(renderer, NULL);
                         SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-
-                        // Update the end coordinates of the line
-                        data.line.endX = event.motion.x;
-                        data.line.endY = event.motion.y;
-                        draw(renderer, shape, &data);  // Draw the current line
-
-                        SDL_RenderPresent(renderer);  // Update the renderer
+                        SDL_RenderPresent(renderer);
+                    }
+                    break;
+                case SDL_MOUSEMOTION:
+                    if (updateData(shape, &data, event)) {
+                        // Draw the savedBuffer texture and preview the new shape
+                        SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
+                        draw(renderer, shape, &data);
+                        SDL_RenderPresent(renderer);
                     }
                     break;
             }
         }
     }
 
-    // Cleanup textures after loop ends
+    // Clean up textures when the loop ends
     SDL_DestroyTexture(savedBuffer);
 }

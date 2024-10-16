@@ -2,14 +2,25 @@
 #define DRAW_H
 
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 #include <stdio.h>
+
+// Macros to handle mouse events
+#define isMouseDown event.type == SDL_MOUSEBUTTONDOWN
+#define isMouseUP event.type == SDL_MOUSEBUTTONUP
+#define isMouseInMotion event.type == SDL_MOUSEMOTION
+
+// Macros to track mouse position and button state
+#define mouseX event.button.x
+#define mouseY event.button.y
+#define isLeftButton event.button.button == SDL_BUTTON_LEFT
 
 // Enum to define different shapes that can be drawn
 typedef enum {
-    ERASE,      // Erase mode
+    ERASE,      // Erase mode (not implemented)
     POINT,      // Point shape
     LINE,       // Line shape
-    RECTANGLE   // Rectangle shape (not implemented yet)
+    RECTANGLE   // Rectangle shape
 } SHAPE;
 
 // Structure to hold line coordinates
@@ -26,14 +37,22 @@ typedef struct {
     int startY;  // Y coordinate of the point
 } POINT_STRUCT;
 
-// Structure to hold data for different shapes
-typedef struct {
-    SDL_Rect rectangle;  // Rectangle shape (not used yet)
-    LINE_STRUCT line;    // Line data
-    POINT_STRUCT point;  // Point data
+// Union to hold data for different shapes
+typedef union {
+    SDL_Rect rectangle;  // Rectangle shape
+    LINE_STRUCT line;    // Line shape
+    POINT_STRUCT point;  // Point shape
 } SHAPE_DATA;
 
-// Function declaration for drawing shapes
+// Function declarations for drawing shapes
 void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data);
+
+// Functions for updating SHAPE_DATA for specific SHAPE types
+bool pointDataUpdate(SDL_Event event, SHAPE_DATA *data);
+bool lineDataUpdate(SDL_Event event, SHAPE_DATA *data);
+bool rectangleDataUpdate(SDL_Event event, SHAPE_DATA *data);
+
+// Function to update shape data based on the current event
+bool updateData(SHAPE shape, SHAPE_DATA *data, SDL_Event event);
 
 #endif // DRAW_H
