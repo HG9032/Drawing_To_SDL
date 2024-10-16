@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1729075133 source:e:\c\drawing_to_sdl\main.c
+	<stdio.h>
+	<SDL2/SDL.h>
+	<stdbool.h>
+	"draw.h"
+
+1729075246 e:\c\drawing_to_sdl\include\draw.h
+	<SDL2/SDL.h>
+	<stdio.h>
+
+1729075316 source:e:\c\drawing_to_sdl\src\draw.c
+	"draw.h"
+
+1729034836 e:\c\drawing_to_sdl\include\test.h
+	<SDL2/SDL.h>
+	<stdio.h>
+
+1729072033 source:e:\c\drawing_to_sdl\src\test.c
+	"test.h"
+
