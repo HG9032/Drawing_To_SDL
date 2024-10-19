@@ -3,17 +3,15 @@
 #include <stdbool.h>
 #include "draw.h"
 #include "shape_movement.h"
-//#include "test.h"
 
 // Global window dimensions
-int windowWidth = 800;
-int windowHeight = 600;
-SDL_Cursor *customCursor = NULL;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 
 // Function declarations
-bool Init(SDL_Window **window, SDL_Renderer **renderer);
-void ShutDown(SDL_Window *window, SDL_Renderer *renderer);
-void Loop(SDL_Renderer *renderer);
+bool InitializeSDL(SDL_Window **window, SDL_Renderer **renderer);
+void CleanupSDL(SDL_Window *window, SDL_Renderer *renderer);
+void MainLoop(SDL_Renderer *renderer);
 SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height);
 
 // Main function to initialize, run the loop, and clean up
@@ -22,19 +20,19 @@ int main(int argc, char *argv[]) {
     SDL_Renderer *renderer = NULL;
 
     // Initialize SDL and create window/renderer
-    if (!Init(&window, &renderer)) return 1;
+    if (!InitializeSDL(&window, &renderer)) return 1;
 
     // Main application loop
-    Loop(renderer);
+    MainLoop(renderer);
 
     // Clean up and shut down SDL
-    ShutDown(window, renderer);
+    CleanupSDL(window, renderer);
 
     return 0;
 }
 
 // Initializes SDL, creates window and renderer
-bool Init(SDL_Window **window, SDL_Renderer **renderer) {
+bool InitializeSDL(SDL_Window **window, SDL_Renderer **renderer) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL Initialization failed. Error: %s\n", SDL_GetError());
         return false;
@@ -42,7 +40,7 @@ bool Init(SDL_Window **window, SDL_Renderer **renderer) {
 
     // Create window with specified dimensions
     *window = SDL_CreateWindow("My Paint", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                               windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+                               WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (!*window) {
         printf("Window creation failed. Error: %s\n", SDL_GetError());
         SDL_Quit();
@@ -62,10 +60,7 @@ bool Init(SDL_Window **window, SDL_Renderer **renderer) {
 }
 
 // Cleans up and shuts down SDL
-void ShutDown(SDL_Window *window, SDL_Renderer *renderer) {
-    if (customCursor) {
-        SDL_FreeCursor(customCursor);  // Free the custom cursor
-    }
+void CleanupSDL(SDL_Window *window, SDL_Renderer *renderer) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -89,24 +84,19 @@ SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height) {
 }
 
 // Main event loop to handle input and rendering
-void Loop(SDL_Renderer *renderer) {
+void MainLoop(SDL_Renderer *renderer) {
     bool running = true;  // Controls the loop execution
     SDL_Event event;      // Stores event data
-    SHAPE shape = NONE;  // Initial shape set to NONE
-    SDL_Texture *savedBuffer = NULL;
-    int shapeNumber = -1;
-    bool mouseOver = false;
-
-    // Create texture for saving the drawing state
-    savedBuffer = CreateClearTexture(renderer, windowWidth, windowHeight);
+    SHAPE currentShape = NONE;  // Initial shape set to NONE
+    SDL_Texture *savedBuffer = CreateClearTexture(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (!savedBuffer) return;  // Exit if texture creation fails
 
     // Render the cleared texture onto the screen
     SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
     SDL_RenderPresent(renderer);
 
-    //bool down = false;  // Tracks whether the mouse button is held down
-    SHAPE_DATA data;
+    SHAPE_DATA shapeData;  // Structure to hold shape data
+    int shapeIndex = -1;   // Index of the shape being interacted with
 
     // Event loop to process user input
     while (running) {
@@ -120,54 +110,48 @@ void Loop(SDL_Renderer *renderer) {
                         case SDLK_x:  // Exit on 'x' key
                             running = false;
                             break;
-                        case SDLK_m:
-                            shape = MOVE;
-                            break;
-                        case SDLK_l:  // Switch to line shape
-                            shape = LINE;
-                            break;
-                        case SDLK_r:  // Switch to rectangle shape
-                            shape = RECTANGLE;
-                            break;
-                        case SDLK_p:  // Switch to point shape
-                            shape = POINT;
-                            break;
+                        case SDLK_m: currentShape = MOVE; break;
+                        case SDLK_l: currentShape = LINE; break;
+                        case SDLK_r: currentShape = RECTANGLE; break;
+                        case SDLK_p: currentShape = POINT; break;
                     }
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
-                    if(event.type == SDL_MOUSEBUTTONDOWN)
-                        shapeNumber = isMouseOverShape(event);
-                    if(event.type == SDL_MOUSEBUTTONUP)
-                        shapeNumber = -1;
+                    if (event.type == SDL_MOUSEBUTTONDOWN) {
+                        shapeIndex = IsMouseOverShape(event);
+                    }
+                    if (event.type == SDL_MOUSEBUTTONUP) {
+                        shapeIndex = -1;  // Reset shape index on mouse button release
+                    }
 
-                    if (updateData(shape, &data, event, shapeNumber, renderer, &savedBuffer) != NONE) {
+                    // Update shape data and draw if necessary
+                    if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
                         // Draw on savedBuffer texture
                         SDL_SetRenderTarget(renderer, savedBuffer);
-                        draw(renderer, shape, &data, shapeNumber);
-                        if(shape != MOVE){
-                            saveShape(shape, &data);
+                        DrawShape(renderer, currentShape, &shapeData, shapeIndex);
 
-                            // Render savedBuffer with the new shape
+                        // If not moving, save the shape and render the updated buffer
+                        if (currentShape != MOVE) {
+                            SaveShape(currentShape, &shapeData);
                             SDL_SetRenderTarget(renderer, NULL);
                             SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
                             SDL_RenderPresent(renderer);
                         }
                     }
-
                     break;
+
                 case SDL_MOUSEMOTION:
-                    if (isMouseOverShape(event) >= 0) {
+                    // Change cursor if mouse is over a shape
+                    if (IsMouseOverShape(event) >= 0) {
                         SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND));  // Set to hand cursor
-                        mouseOver = true;
                     } else {
                         SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));  // Reset to arrow cursor
-                        mouseOver = false;
                     }
-                    if (updateData(shape, &data, event, shapeNumber, renderer, savedBuffer) != NONE) {
-                        // Draw the savedBuffer texture and preview the new shape
+                    // Update shape data for drawing preview
+                    if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
                         SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-                        draw(renderer, shape, &data, shapeNumber);
+                        DrawShape(renderer, currentShape, &shapeData, shapeIndex);
                         SDL_RenderPresent(renderer);
                     }
                     break;

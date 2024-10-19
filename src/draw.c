@@ -1,9 +1,7 @@
 #include "draw.h"
 
-
 // Function to draw different shapes on the renderer
-void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber) {
-
+void DrawShape(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeIndex) {
     // Set the draw color to black (RGBA)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -20,9 +18,6 @@ void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber
         case RECTANGLE:  // Draw a rectangle
             SDL_RenderDrawRect(renderer, &(data->rectangle));
             break;
-        case MOVE:
-
-            break;
         // Additional shapes can be added here in the future
     }
 }
@@ -30,83 +25,95 @@ void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber
 // Functions for updating data for specific shape types
 
 // Update point data when mouse button is pressed
-bool pointDataUpdate(SDL_Event event, SHAPE_DATA *data) {
-    if (isMouseDown && isLeftButton) {
-        data->point.startX = mouseX;  // Set X coordinate of the point
-        data->point.startY = mouseY;  // Set Y coordinate of the point
+bool UpdatePointData(SDL_Event event, SHAPE_DATA *data) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+        data->point.startX = event.button.x;  // Set X coordinate of the point
+        data->point.startY = event.button.y;  // Set Y coordinate of the point
         return true;  // Data updated, return true
     }
     return false;  // No data update, return false
 }
 
 // Update line data as the mouse is pressed, moved, or released
-bool lineDataUpdate(SDL_Event event, SHAPE_DATA *data) {
-    if (isMouseDown && isLeftButton) {  // Set start coordinates when mouse button is down
-        data->line.startX = mouseX;
-        data->line.startY = mouseY;
+bool UpdateLineData(SDL_Event event, SHAPE_DATA *data) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {  // Set start coordinates when mouse button is down
+        data->line.startX = event.button.x;
+        data->line.startY = event.button.y;
         return false;  // Initial click does not complete the line
-    } else if ((isMouseInMotion || isMouseUP) && isLeftButton) {  // Update end coordinates while mouse moves or when button is released
-        data->line.endX = mouseX;
-        data->line.endY = mouseY;
+    } else if ((event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT) {  // Update end coordinates while mouse moves or when button is released
+        data->line.endX = event.button.x;
+        data->line.endY = event.button.y;
         return true;  // Line is completed
     }
     return false;  // No data update
 }
 
 // Update rectangle data as the mouse is pressed, moved, or released
-bool rectangleDataUpdate(SDL_Event event, SHAPE_DATA *data) {
-    if (isMouseDown && isLeftButton) {  // Set initial rectangle corner when mouse button is down
-        data->rectangle.x = mouseX;
-        data->rectangle.y = mouseY;
+bool UpdateRectangleData(SDL_Event event, SHAPE_DATA *data) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {  // Set initial rectangle corner when mouse button is down
+                data->rectangle.x = event.button.x;
+        data->rectangle.y = event.button.y;
         return false;  // Initial click does not complete the rectangle
-    } else if ((isMouseInMotion || isMouseUP) && isLeftButton) {  // Update rectangle dimensions while mouse moves or button is released
-        data->rectangle.w = mouseX - data->rectangle.x;  // Calculate width
-        data->rectangle.h = mouseY - data->rectangle.y;  // Calculate height
+    } else if ((event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT) {  // Update rectangle dimensions while mouse moves or button is released
+        data->rectangle.w = event.button.x - data->rectangle.x;  // Calculate width
+        data->rectangle.h = event.button.y - data->rectangle.y;  // Calculate height
         return true;  // Rectangle is completed
     }
     return false;  // No data update
 }
 
 // Move shape logic
-bool moveShape(SDL_Event event, SHAPE_DATA *data, SHAPE shape, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
+bool MoveShape(SDL_Event event, SHAPE_DATA *data, int shapeIndex, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
     static int offsetX = 0, offsetY = 0;  // Store the offset between the mouse and shape's position
-    static bool moveIt = false;
-    static int x1, y1;
+    static bool isMoving = false;
 
-    if (isMouseDown && isLeftButton) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
         // Start the movement by calculating the initial offset
-        offsetX = mouseX - arrayOfShapes[shapeNumber].data.line.startX;
-        offsetY = mouseY - arrayOfShapes[shapeNumber].data.line.startY;
-        moveIt = true;
+        offsetX = event.button.x - arrayOfShapes[shapeIndex].data.line.startX;
+        offsetY = event.button.y - arrayOfShapes[shapeIndex].data.line.startY;
+        isMoving = true;
         return false;
-    } else if ((isMouseInMotion || isMouseUP) && isLeftButton && moveIt) {
-        int newX = mouseX - offsetX;  // New position for the start X
-        int newY = mouseY - offsetY;  // New position for the start Y
+    } else if ((event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT && isMoving) {
+        int newX = event.button.x - offsetX;  // New position for the start X
+        int newY = event.button.y - offsetY;  // New position for the start Y
 
         // Update both start and end coordinates of the line
-        int deltaX = newX - arrayOfShapes[shapeNumber].data.line.startX;
-        int deltaY = newY - arrayOfShapes[shapeNumber].data.line.startY;
+        int deltaX = newX - arrayOfShapes[shapeIndex].data.line.startX;
+        int deltaY = newY - arrayOfShapes[shapeIndex].data.line.startY;
 
-        // Update line's start and end points with the delta
-        arrayOfShapes[shapeNumber].data.line.startX += deltaX;
-        arrayOfShapes[shapeNumber].data.line.startY += deltaY;
-        arrayOfShapes[shapeNumber].data.line.endX += deltaX;
-        arrayOfShapes[shapeNumber].data.line.endY += deltaY;
-
-         // Render everything again to ensure other shapes remain
-        SDL_SetRenderTarget(renderer, savedBuffer);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderClear(renderer);  // Clear the renderer before redrawing
-        for (int i = 0; i < 10; i++) {  // Assuming totalShapes is the total number of shapes
-            draw(renderer, arrayOfShapes[i].shape, &arrayOfShapes[i].data, i);
+        switch (arrayOfShapes[shapeIndex].shape) {
+            case LINE:
+                // Update line's start and end points with the delta
+                arrayOfShapes[shapeIndex].data.line.startX += deltaX;
+                arrayOfShapes[shapeIndex].data.line.startY += deltaY;
+                arrayOfShapes[shapeIndex].data.line.endX += deltaX;
+                arrayOfShapes[shapeIndex].data.line.endY += deltaY;
+                break;
+            case RECTANGLE:
+                // Update rectangle's start points with the delta
+                arrayOfShapes[shapeIndex].data.rectangle.x += deltaX;
+                arrayOfShapes[shapeIndex].data.rectangle.y += deltaY;
+                break;
+            default:
+                return false;
         }
+
+        // Render everything again to ensure other shapes remain
+        SDL_SetRenderTarget(renderer, savedBuffer);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // Clear to white
+        SDL_RenderClear(renderer);  // Clear the renderer before redrawing
+
+        for (int i = 0; i < 10; i++) {  // Assuming totalShapes is the total number of shapes
+            DrawShape(renderer, arrayOfShapes[i].shape, &arrayOfShapes[i].data, i);
+        }
+
         SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderCopy(renderer, &savedBuffer, NULL, NULL);
+        SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
         SDL_RenderPresent(renderer);
 
         // Stop moving if the mouse button is released
-        if (isMouseUP) {
-            moveIt = false;
+        if (event.type == SDL_MOUSEBUTTONUP) {
+            isMoving = false;
         }
         return true;
     }
@@ -114,17 +121,17 @@ bool moveShape(SDL_Event event, SHAPE_DATA *data, SHAPE shape, int shapeNumber, 
 }
 
 // Update the shape data based on the current shape and event
-SHAPE updateData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
+SHAPE UpdateShapeData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeIndex, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
     // Switch between different shapes and update their respective data
     switch (shape) {
         case POINT:
-            return pointDataUpdate(event, data) == true ? POINT : NONE;  // Handle point update
+            return UpdatePointData(event, data) ? POINT : NONE;  // Handle point update
         case LINE:
-            return lineDataUpdate(event, data) == true ? LINE : NONE;   // Handle line update
+            return UpdateLineData(event, data) ? LINE : NONE;   // Handle line update
         case RECTANGLE:
-            return rectangleDataUpdate(event, data) == true ? RECTANGLE : NONE;  // Handle rectangle update
+            return UpdateRectangleData(event, data) ? RECTANGLE : NONE;  // Handle rectangle update
         case MOVE:
-            return moveShape(event, data, shape, shapeNumber, renderer, savedBuffer) == true ? MOVE : NONE;
+            return MoveShape(event, data, shapeIndex, renderer, savedBuffer) ? MOVE : NONE;
         default:
             return NONE;  // No valid shape selected
     }

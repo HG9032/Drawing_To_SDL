@@ -1,8 +1,11 @@
 #include "shape_movement.h"
 
-SDL_Cursor* loadCustomCursor(const char *iconePath) {
+int i = 0;
+
+// Load cursor icon from a bitmap file
+SDL_Cursor* LoadCustomCursor(const char *iconPath) {
     // Load the cursor image as a surface
-    SDL_Surface *cursorSurface = SDL_LoadBMP(iconePath);
+    SDL_Surface *cursorSurface = SDL_LoadBMP(iconPath);
     if (!cursorSurface) {
         printf("Failed to load cursor image: %s\n", SDL_GetError());
         return NULL;
@@ -14,15 +17,17 @@ SDL_Cursor* loadCustomCursor(const char *iconePath) {
     return cursor;
 }
 
-void saveShape(SHAPE shape, SHAPE_DATA *data){
+// Save drawn shape into the global shapes array
+void SaveShape(SHAPE shape, SHAPE_DATA *data) {
     arrayOfShapes[i].shape = shape;
     arrayOfShapes[i].data = *data;
     i++;
 }
 
-int isMouseOverShape(SDL_Event event){
-    for(int i = 0; i < 10; i++){
-        switch(arrayOfShapes[i].shape){
+// Check if the mouse is over any shape
+int IsMouseOverShape(SDL_Event event) {
+    for (int i = 0; i < 10; i++) {
+        switch (arrayOfShapes[i].shape) {
             case LINE: {
                 // Get the line data from the shape array
                 int x1 = arrayOfShapes[i].data.line.startX;
@@ -43,7 +48,7 @@ int isMouseOverShape(SDL_Event event){
                     // Ensure the mouse is within the line segment bounds
                     if ((mouseX >= fmin(x1, x2) && mouseX <= fmax(x1, x2)) &&
                         (mouseY >= fmin(y1, y2) && mouseY <= fmax(y1, y2))) {
-                        return i;
+                        return i;  // Mouse is over the line
                     }
                 }
                 break;
@@ -60,28 +65,21 @@ int isMouseOverShape(SDL_Event event){
                 int top = (y1 < y2) ? y1 : y2;
                 int bottom = (y1 > y2) ? y1 : y2;
 
-                // Check if the mouse is near the left or right edge
-                if (abs(mouseX - left) < 5 || abs(mouseX - right) < 5) {
-                    if (top <= mouseY && mouseY <= bottom) {
-                        return i;  // Mouse is over a vertical edge
-                    }
+                // Check if the mouse is near the edges of the rectangle
+                if ((abs(mouseX - left) < 5 || abs(mouseX - right) < 5) && (top <= mouseY && mouseY <= bottom)) {
+                    return i;  // Mouse is over a vertical edge
                 }
-
-                // Check if the mouse is near the top or bottom edge
-                if (abs(mouseY - top) < 5 || abs(mouseY - bottom) < 5) {
-                    if (left <= mouseX && mouseX <= right) {
-                        return i;  // Mouse is over a horizontal edge
-                    }
+                if ((abs(mouseY - top) < 5 || abs(mouseY - bottom) < 5) && (left <= mouseX && mouseX <= right)) {
+                    return i;  // Mouse is over a horizontal edge
                 }
                 break;
             }
-                break;
             case POINT:
+                // Check if the mouse is over a point (optional)
                 break;
             default:
-                return -1;
+                return -1;  // No shape to check
+            }
         }
-    }
-    return -1;
+    return -1;  // No shape found under the mouse
 }
-

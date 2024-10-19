@@ -60,7 +60,7 @@ void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber
 bool pointDataUpdate(SDL_Event event, SHAPE_DATA *data);
 bool lineDataUpdate(SDL_Event event, SHAPE_DATA *data);
 bool rectangleDataUpdate(SDL_Event event, SHAPE_DATA *data);
-bool moveShape(SDL_Event event, SHAPE_DATA *data, SHAPE shape, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer);
+bool moveShape(SDL_Event event, SHAPE_DATA *data, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer);
 
 // Function to update shape data based on the current event
 SHAPE updateData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer);

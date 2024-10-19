@@ -1,5 +1,5 @@
-#ifndef SHAPE_MOVEMENT_H
-#define SHAPE_MOVEMENT_H
+#ifndef SHAPE_INTERACTION_H
+#define SHAPE_INTERACTION_H
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -7,15 +7,9 @@
 #include <math.h>
 #include "draw.h"
 
-static int i = 0;
+// Function declarations for cursor and shape interactions
+SDL_Cursor *LoadCustomCursor(const char *iconPath);
+void SaveShape(SHAPE shape, SHAPE_DATA *data);
+int IsMouseOverShape(SDL_Event event);
 
-// Load cursor icon
-SDL_Cursor *loadCustomCursor(const char *iconePath);
-
-// Save drawn SHAPE
-void saveShape(SHAPE shape, SHAPE_DATA *data);
-
-// Detect if mouse is over a shape
-int isMouseOverShape(SDL_Event event);
-
-#endif // SHAPE_MOVEMENT_H
+#endif // SHAPE_INTERACTION_H
