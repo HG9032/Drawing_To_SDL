@@ -33,16 +33,20 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="include/draw.h" />
-		<Unit filename="include/shape_movement.h" />
+		<Unit filename="include/gensdl.h" />
+		<Unit filename="include/shape_draw.h" />
+		<Unit filename="include/shape_interaction.h" />
 		<Unit filename="include/test.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/draw.c">
+		<Unit filename="src/gensdl.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/shape_movement.c">
+		<Unit filename="src/shape_draw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/shape_interaction.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/test.c">

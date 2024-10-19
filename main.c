@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-#include "draw.h"
-#include "shape_movement.h"
+#include "shape_draw.h"
+#include "shape_interaction.h"
+#include "gensdl.h"
 
 // Global window dimensions
 const int WINDOW_WIDTH = 800;
@@ -114,6 +115,7 @@ void MainLoop(SDL_Renderer *renderer) {
                         case SDLK_l: currentShape = LINE; break;
                         case SDLK_r: currentShape = RECTANGLE; break;
                         case SDLK_p: currentShape = POINT; break;
+                        case SDLK_g: generate_SDL_code(); break;
                     }
                     break;
                 case SDL_MOUSEBUTTONDOWN:

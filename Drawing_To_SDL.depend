@@ -1,10 +1,11 @@
 # depslib dependency file v1.0
-1729370858 source:e:\c\drawing_to_sdl\main.c
+1729374538 source:e:\c\drawing_to_sdl\main.c
 	<stdio.h>
 	<SDL2/SDL.h>
 	<stdbool.h>
-	"draw.h"
-	"shape_movement.h"
+	"shape_draw.h"
+	"shape_interaction.h"
+	"gensdl.h"
 
 1729350043 e:\c\drawing_to_sdl\include\draw.h
 	<SDL2/SDL.h>
@@ -18,7 +19,7 @@
 	<SDL2/SDL.h>
 	<stdio.h>
 
-1729109021 source:e:\c\drawing_to_sdl\src\test.c
+1729376661 source:e:\c\drawing_to_sdl\src\test.c
 	"test.h"
 
 1729370783 e:\c\drawing_to_sdl\include\shape_movement.h
@@ -28,7 +29,7 @@
 	<math.h>
 	"draw.h"
 
-1729350202 source:e:\c\drawing_to_sdl\src\shape_movement.c
+1729371123 source:e:\c\drawing_to_sdl\src\shape_movement.c
 	"shape_movement.h"
 
 1729342584 source:c:\users\dell\documents\github\drawing_to_sdl\main.c
@@ -62,4 +63,30 @@
 1729109187 c:\users\dell\documents\github\drawing_to_sdl\include\test.h
 	<SDL2/SDL.h>
 	<stdio.h>
+
+1729371987 e:\c\drawing_to_sdl\include\shape_draw.h
+	<SDL2/SDL.h>
+	<stdbool.h>
+	<stdio.h>
+
+1729371958 e:\c\drawing_to_sdl\include\shape_interaction.h
+	<SDL2/SDL.h>
+	<stdio.h>
+	<stdbool.h>
+	<math.h>
+	"shape_draw.h"
+
+1729374326 source:e:\c\drawing_to_sdl\src\shape_draw.c
+	"shape_draw.h"
+
+1729371951 source:e:\c\drawing_to_sdl\src\shape_interaction.c
+	"shape_interaction.h"
+
+1729373546 e:\c\drawing_to_sdl\include\gensdl.h
+	<stdio.h>
+	<string.h>
+	"shape_draw.h"
+
+1729376642 source:e:\c\drawing_to_sdl\src\gensdl.c
+	"gensdl.h"
 
