@@ -1,7 +1,7 @@
 # Drawing_To_SDL
 
-To draw line press l
-To draw point press p
-To draw rectangle press r
-To exit press x
-To move for now just line press m
+To draw line press l <br>
+To draw point press p <br>
+To draw rectangle press r <br>
+To exit press x <br>
+To move for now just line press m <br>
