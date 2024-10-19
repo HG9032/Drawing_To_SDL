@@ -1,23 +1,33 @@
 # depslib dependency file v1.0
-1729092797 source:e:\c\drawing_to_sdl\main.c
+1729342584 source:e:\c\drawing_to_sdl\main.c
 	<stdio.h>
 	<SDL2/SDL.h>
 	<stdbool.h>
 	"draw.h"
-	"test.h"
+	"shape_movement.h"
 
-1729093145 e:\c\drawing_to_sdl\include\draw.h
+1729342558 e:\c\drawing_to_sdl\include\draw.h
 	<SDL2/SDL.h>
 	<stdbool.h>
 	<stdio.h>
 
-1729092290 source:e:\c\drawing_to_sdl\src\draw.c
+1729341482 source:e:\c\drawing_to_sdl\src\draw.c
 	"draw.h"
 
-1729034836 e:\c\drawing_to_sdl\include\test.h
+1729109187 e:\c\drawing_to_sdl\include\test.h
 	<SDL2/SDL.h>
 	<stdio.h>
 
-1729083931 source:e:\c\drawing_to_sdl\src\test.c
+1729109021 source:e:\c\drawing_to_sdl\src\test.c
 	"test.h"
+
+1729284163 e:\c\drawing_to_sdl\include\shape_movement.h
+	<SDL2/SDL.h>
+	<stdio.h>
+	<stdbool.h>
+	<math.h>
+	"draw.h"
+
+1729340027 source:e:\c\drawing_to_sdl\src\shape_movement.c
+	"shape_movement.h"
 

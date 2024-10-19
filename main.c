@@ -2,11 +2,13 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include "draw.h"
-#include "test.h"
+#include "shape_movement.h"
+//#include "test.h"
 
 // Global window dimensions
 int windowWidth = 800;
 int windowHeight = 600;
+SDL_Cursor *customCursor = NULL;
 
 // Function declarations
 bool Init(SDL_Window **window, SDL_Renderer **renderer);
@@ -24,7 +26,6 @@ int main(int argc, char *argv[]) {
 
     // Main application loop
     Loop(renderer);
-    // test(renderer);  // Uncomment if you want to run test functionality
 
     // Clean up and shut down SDL
     ShutDown(window, renderer);
@@ -62,6 +63,9 @@ bool Init(SDL_Window **window, SDL_Renderer **renderer) {
 
 // Cleans up and shuts down SDL
 void ShutDown(SDL_Window *window, SDL_Renderer *renderer) {
+    if (customCursor) {
+        SDL_FreeCursor(customCursor);  // Free the custom cursor
+    }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -88,8 +92,10 @@ SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height) {
 void Loop(SDL_Renderer *renderer) {
     bool running = true;  // Controls the loop execution
     SDL_Event event;      // Stores event data
-    SHAPE shape = ERASE;  // Initial shape set to ERASE
+    SHAPE shape = NONE;  // Initial shape set to NONE
     SDL_Texture *savedBuffer = NULL;
+    int shapeNumber = -1;
+    bool mouseOver = false;
 
     // Create texture for saving the drawing state
     savedBuffer = CreateClearTexture(renderer, windowWidth, windowHeight);
@@ -99,7 +105,7 @@ void Loop(SDL_Renderer *renderer) {
     SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
     SDL_RenderPresent(renderer);
 
-    bool down = false;  // Tracks whether the mouse button is held down
+    //bool down = false;  // Tracks whether the mouse button is held down
     SHAPE_DATA data;
 
     // Event loop to process user input
@@ -114,6 +120,9 @@ void Loop(SDL_Renderer *renderer) {
                         case SDLK_x:  // Exit on 'x' key
                             running = false;
                             break;
+                        case SDLK_m:
+                            shape = MOVE;
+                            break;
                         case SDLK_l:  // Switch to line shape
                             shape = LINE;
                             break;
@@ -127,29 +136,44 @@ void Loop(SDL_Renderer *renderer) {
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
-                    if (updateData(shape, &data, event)) {
+                    if(event.type == SDL_MOUSEBUTTONDOWN)
+                        shapeNumber = isMouseOverShape(event);
+                    if(event.type == SDL_MOUSEBUTTONUP)
+                        shapeNumber = -1;
+
+                    if (updateData(shape, &data, event, shapeNumber, renderer, &savedBuffer) != NONE) {
                         // Draw on savedBuffer texture
                         SDL_SetRenderTarget(renderer, savedBuffer);
-                        draw(renderer, shape, &data);
+                        draw(renderer, shape, &data, shapeNumber);
+                        if(shape != MOVE){
+                            saveShape(shape, &data);
 
-                        // Render savedBuffer with the new shape
-                        SDL_SetRenderTarget(renderer, NULL);
-                        SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-                        SDL_RenderPresent(renderer);
+                            // Render savedBuffer with the new shape
+                            SDL_SetRenderTarget(renderer, NULL);
+                            SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
+                            SDL_RenderPresent(renderer);
+                        }
                     }
+
                     break;
                 case SDL_MOUSEMOTION:
-                    if (updateData(shape, &data, event)) {
+                    if (isMouseOverShape(event) >= 0) {
+                        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND));  // Set to hand cursor
+                        mouseOver = true;
+                    } else {
+                        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));  // Reset to arrow cursor
+                        mouseOver = false;
+                    }
+                    if (updateData(shape, &data, event, shapeNumber, renderer, savedBuffer) != NONE) {
                         // Draw the savedBuffer texture and preview the new shape
                         SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-                        draw(renderer, shape, &data);
+                        draw(renderer, shape, &data, shapeNumber);
                         SDL_RenderPresent(renderer);
                     }
                     break;
             }
         }
     }
-
     // Clean up textures when the loop ends
     SDL_DestroyTexture(savedBuffer);
 }
