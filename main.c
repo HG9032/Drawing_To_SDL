@@ -115,6 +115,7 @@ void MainLoop(SDL_Renderer *renderer) {
                         case SDLK_l: currentShape = LINE; break;
                         case SDLK_r: currentShape = RECTANGLE; break;
                         case SDLK_p: currentShape = POINT; break;
+                        case SDLK_c: currentShape = CIRCLE; break;
                         case SDLK_g: generate_SDL_code(); break;
                     }
                     break;

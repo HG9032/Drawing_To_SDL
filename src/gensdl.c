@@ -20,6 +20,16 @@ void generate_SDL_code(){
 
         fwrite(renderer, sizeof(char), strlen(renderer), file);
 
+        const char *circle_function = "void drawCircle(int startX, int startY, int radius){\n"
+                                        "for(int y = -radius; y <= radius; y++){\n"
+                                        "\tfor(int x = -radius; x <= radius; x++){\n"
+                                        "\t\tif(abs((x * x + y * y) - radius * radius) <= radius/1.08) SDL_RenderDrawPoint(renderer, startX + x, startY + y);\n"
+                                        "\t\t}\n"
+                                        "\t}\n"
+                                        "}\n\n";
+
+        fwrite(circle_function, sizeof(char), strlen(circle_function), file);
+
         for(int i = 0; i < 10; i++){
             switch(arrayOfShapes[i].shape){
                 case LINE:{
@@ -50,10 +60,20 @@ void generate_SDL_code(){
                     fwrite(rectangle_code, sizeof(char), strlen(rectangle_code), file);
                 }
                     break;
+                case CIRCLE:{
+                    int startX = arrayOfShapes[i].data.circle.startX;
+                    int startY = arrayOfShapes[i].data.circle.startY;
+                    int radius = arrayOfShapes[i].data.circle.radius;
+                    const char *drawCircle[100];
+                    sprintf(drawCircle, "drawCircle(%d, %d, %d);\n", startX, startY, radius);
+
+                    fwrite(drawCircle, sizeof(char), strlen(drawCircle), file);
+                    break;
+                }
             }
         }
 
-        const char *asd = "SDL_RenderPresent(renderer);\n";
+        const char *asd = "\nSDL_RenderPresent(renderer);\n";
         fwrite(asd, sizeof(char), strlen(asd), file);
 
         fclose(file);

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1729374538 source:e:\c\drawing_to_sdl\main.c
+1729449357 source:e:\c\drawing_to_sdl\main.c
 	<stdio.h>
 	<SDL2/SDL.h>
 	<stdbool.h>
@@ -64,10 +64,11 @@
 	<SDL2/SDL.h>
 	<stdio.h>
 
-1729371987 e:\c\drawing_to_sdl\include\shape_draw.h
+1729450059 e:\c\drawing_to_sdl\include\shape_draw.h
 	<SDL2/SDL.h>
 	<stdbool.h>
 	<stdio.h>
+	<math.h>
 
 1729371958 e:\c\drawing_to_sdl\include\shape_interaction.h
 	<SDL2/SDL.h>
@@ -76,7 +77,7 @@
 	<math.h>
 	"shape_draw.h"
 
-1729374326 source:e:\c\drawing_to_sdl\src\shape_draw.c
+1729452253 source:e:\c\drawing_to_sdl\src\shape_draw.c
 	"shape_draw.h"
 
 1729371951 source:e:\c\drawing_to_sdl\src\shape_interaction.c
@@ -87,6 +88,6 @@
 	<string.h>
 	"shape_draw.h"
 
-1729376642 source:e:\c\drawing_to_sdl\src\gensdl.c
+1729453582 source:e:\c\drawing_to_sdl\src\gensdl.c
 	"gensdl.h"
 

@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <math.h>
 
 // Macros to handle mouse events
 #define isMouseDown event.type == SDL_MOUSEBUTTONDOWN
@@ -22,8 +23,16 @@ typedef enum {
     POINT,      // Point shape
     LINE,       // Line shape
     RECTANGLE,  // Rectangle shape
+    CIRCLE,     // Circle shape
     MOVE        // Move shape
 } SHAPE;
+
+// Structure to hold circle coordinates and radius
+typedef struct{
+    int startX;
+    int startY;
+    int radius;
+} CIRCLE_STRUCT;
 
 // Structure to hold line coordinates
 typedef struct {
@@ -41,9 +50,10 @@ typedef struct {
 
 // Union to hold data for different shapes
 typedef union {
-    SDL_Rect rectangle;  // Rectangle shape
-    LINE_STRUCT line;    // Line shape
-    POINT_STRUCT point;  // Point shape
+    SDL_Rect rectangle;     // Rectangle shape
+    LINE_STRUCT line;       // Line shape
+    POINT_STRUCT point;     // Point shape
+    CIRCLE_STRUCT circle;   // Circle shape
 } SHAPE_DATA;
 
 typedef struct{
@@ -54,7 +64,7 @@ typedef struct{
 SHAPE_AND_DATA arrayOfShapes[10];
 
 // Function declarations for drawing shapes
-void draw(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber);
+void DrawShape(SDL_Renderer *renderer, SHAPE shape, SHAPE_DATA *data, int shapeNumber);
 
 // Functions for updating SHAPE_DATA for specific SHAPE types
 bool pointDataUpdate(SDL_Event event, SHAPE_DATA *data);

@@ -1,0 +1,25 @@
+SDL_Renderer *renderer = {your renderer};
+SDL_Rect rectangleStructure;
+SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+SDL_RenderClear(renderer);
+SDL_RenderPresent(renderer);
+SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+void drawCircle(int startX, int startY, int radius){
+for(int y = -radius; y <= radius; y++){
+	for(int x = -radius; x <= radius; x++){
+		if(abs((x * x + y * y) - radius * radius) <= radius/1.08) SDL_RenderDrawPoint(renderer, startX + x, startY + y);
+		}
+	}
+}
+
+drawCircle(274, 235, 124);
+drawCircle(529, 243, 171);
+rectangleStructure.x = 286;
+rectangleStructure.y = 179;
+rectangleStructure.w = 264;
+rectangleStructure.h = 90;
+SDL_RenderDrawRect(renderer, &rectangleStructure);
+
+
+SDL_RenderPresent(renderer);
