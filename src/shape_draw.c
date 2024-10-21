@@ -101,13 +101,13 @@ bool UpdateRectangleData(SDL_Event event, SHAPE_DATA *data) {
 }
 
 // Move shape logic
-bool MoveShape(SDL_Event event, SHAPE_DATA *data, int shapeIndex, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
+bool MoveShape(SDL_Event event, SHAPE_DATA *data, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
     static int offsetX = 0, offsetY = 0;  // Store the offset between the mouse and shape's position
 
     if (isMouseDown && isLeftButton) {
         // Start the movement by calculating the initial offset
-        offsetX = event.button.x - arrayOfShapes[shapeIndex].data.line.startX;
-        offsetY = event.button.y - arrayOfShapes[shapeIndex].data.line.startY;
+        offsetX = event.button.x - arrayOfShapes[shapeNumber].data.line.startX;
+        offsetY = event.button.y - arrayOfShapes[shapeNumber].data.line.startY;
         stillDown = true;
         return false;
     } else if ((isMouseInMotion || isMouseUP) && isLeftButton && stillDown) {
@@ -115,21 +115,25 @@ bool MoveShape(SDL_Event event, SHAPE_DATA *data, int shapeIndex, SDL_Renderer *
         int newY = event.button.y - offsetY;  // New position for the start Y
 
         // Update both start and end coordinates of the line
-        int deltaX = newX - arrayOfShapes[shapeIndex].data.line.startX;
-        int deltaY = newY - arrayOfShapes[shapeIndex].data.line.startY;
+        int deltaX = newX - arrayOfShapes[shapeNumber].data.line.startX;
+        int deltaY = newY - arrayOfShapes[shapeNumber].data.line.startY;
 
-        switch (arrayOfShapes[shapeIndex].shape) {
+        switch (arrayOfShapes[shapeNumber].shape) {
             case LINE:
                 // Update line's start and end points with the delta
-                arrayOfShapes[shapeIndex].data.line.startX += deltaX;
-                arrayOfShapes[shapeIndex].data.line.startY += deltaY;
-                arrayOfShapes[shapeIndex].data.line.endX += deltaX;
-                arrayOfShapes[shapeIndex].data.line.endY += deltaY;
+                arrayOfShapes[shapeNumber].data.line.startX += deltaX;
+                arrayOfShapes[shapeNumber].data.line.startY += deltaY;
+                arrayOfShapes[shapeNumber].data.line.endX += deltaX;
+                arrayOfShapes[shapeNumber].data.line.endY += deltaY;
                 break;
             case RECTANGLE:
                 // Update rectangle's start points with the delta
-                arrayOfShapes[shapeIndex].data.rectangle.x += deltaX;
-                arrayOfShapes[shapeIndex].data.rectangle.y += deltaY;
+                arrayOfShapes[shapeNumber].data.rectangle.x += deltaX;
+                arrayOfShapes[shapeNumber].data.rectangle.y += deltaY;
+                break;
+            case CIRCLE:
+                arrayOfShapes[shapeNumber].data.circle.startX += deltaX;
+                arrayOfShapes[shapeNumber].data.circle.startY += deltaY;
                 break;
             default:
                 return false;
@@ -158,7 +162,7 @@ bool MoveShape(SDL_Event event, SHAPE_DATA *data, int shapeIndex, SDL_Renderer *
 }
 
 // Update the shape data based on the current shape and event
-SHAPE UpdateShapeData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeIndex, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
+SHAPE UpdateShapeData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeNumber, SDL_Renderer *renderer, SDL_Texture *savedBuffer) {
     // Switch between different shapes and update their respective data
     switch (shape) {
         case POINT:
@@ -170,7 +174,7 @@ SHAPE UpdateShapeData(SHAPE shape, SHAPE_DATA *data, SDL_Event event, int shapeI
         case CIRCLE:
             return UpdateCircleData(event, data) ? CIRCLE : NONE; // Handle circle update
         case MOVE:
-            return MoveShape(event, data, shapeIndex, renderer, savedBuffer) ? MOVE : NONE;
+            return MoveShape(event, data, shapeNumber, renderer, savedBuffer) ? MOVE : NONE;
         default:
             return NONE;  // No valid shape selected
     }

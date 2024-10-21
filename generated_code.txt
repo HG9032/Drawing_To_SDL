@@ -13,13 +13,16 @@ for(int y = -radius; y <= radius; y++){
 	}
 }
 
-drawCircle(274, 235, 124);
-drawCircle(529, 243, 171);
-rectangleStructure.x = 286;
-rectangleStructure.y = 179;
-rectangleStructure.w = 264;
-rectangleStructure.h = 90;
+drawCircle(161, 27, 15);
+rectangleStructure.x = 79;
+rectangleStructure.y = 14;
+rectangleStructure.w = 29;
+rectangleStructure.h = 28;
 SDL_RenderDrawRect(renderer, &rectangleStructure);
 
+SDL_RenderDrawLine(renderer, 13, 35, 39, 18);
+SDL_RenderDrawLine(renderer, 1, 60, 215, 59);
+SDL_RenderDrawLine(renderer, 54, 60, 54, -34);
+SDL_RenderDrawLine(renderer, 130, 59, 131, -65);
 
 SDL_RenderPresent(renderer);

@@ -74,6 +74,15 @@ int IsMouseOverShape(SDL_Event event) {
                 }
                 break;
             }
+            case CIRCLE: {
+                int radius = arrayOfShapes[i].data.circle.radius;
+                int x = abs(mouseX) - arrayOfShapes[i].data.circle.startX;
+                int y = abs(mouseY) - arrayOfShapes[i].data.circle.startY;
+
+                if(abs((x * x + y * y) - radius * radius) <= radius/0.09) return i;
+
+                break;
+            }
             case POINT:
                 // Check if the mouse is over a point (optional)
                 break;

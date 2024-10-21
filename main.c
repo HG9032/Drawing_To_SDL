@@ -4,10 +4,11 @@
 #include "shape_draw.h"
 #include "shape_interaction.h"
 #include "gensdl.h"
+#include "controls.h"
 
 // Global window dimensions
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 860;
+const int WINDOW_HEIGHT = 640;
 
 // Function declarations
 bool InitializeSDL(SDL_Window **window, SDL_Renderer **renderer);
@@ -15,13 +16,21 @@ void CleanupSDL(SDL_Window *window, SDL_Renderer *renderer);
 void MainLoop(SDL_Renderer *renderer);
 SDL_Texture* CreateClearTexture(SDL_Renderer *renderer, int width, int height);
 
+SDL_Window *window = NULL;
+SDL_Renderer *renderer = NULL;
+Uint32 ControlWindowID = 0;
+Uint32 MainWindowID = 0;
+
 // Main function to initialize, run the loop, and clean up
 int main(int argc, char *argv[]) {
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
 
     // Initialize SDL and create window/renderer
     if (!InitializeSDL(&window, &renderer)) return 1;
+    MainWindowID =  SDL_GetWindowID(window);
+
+    // Initialize Control Window
+    ControlWindowID = InitializeControlWindow();
+    if(ControlWindowID == 0) return 1;
 
     // Main application loop
     MainLoop(renderer);
@@ -41,7 +50,7 @@ bool InitializeSDL(SDL_Window **window, SDL_Renderer **renderer) {
 
     // Create window with specified dimensions
     *window = SDL_CreateWindow("My Paint", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                               WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+                               WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!*window) {
         printf("Window creation failed. Error: %s\n", SDL_GetError());
         SDL_Quit();
@@ -64,6 +73,7 @@ bool InitializeSDL(SDL_Window **window, SDL_Renderer **renderer) {
 void CleanupSDL(SDL_Window *window, SDL_Renderer *renderer) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    ControlCleanUp();
     SDL_Quit();
 }
 
@@ -102,62 +112,72 @@ void MainLoop(SDL_Renderer *renderer) {
     // Event loop to process user input
     while (running) {
         while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:  // Quit the application
-                    running = false;
-                    break;
-                case SDL_KEYDOWN:  // Handle keyboard input
-                    switch (event.key.keysym.sym) {
-                        case SDLK_x:  // Exit on 'x' key
+            if(event.window.windowID == ControlWindowID){
+                if(event.window.event == SDL_WINDOWEVENT_CLOSE){
+                    ControlCleanUp();
+                }
+                if(isMouseDown) currentShape = ChangeControl(&event);
+            }
+            else if(event.window.windowID == MainWindowID){
+                switch (event.type) {
+                    case SDL_WINDOWEVENT:
+                        if(event.window.event == SDL_WINDOWEVENT_CLOSE){
                             running = false;
-                            break;
-                        case SDLK_m: currentShape = MOVE; break;
-                        case SDLK_l: currentShape = LINE; break;
-                        case SDLK_r: currentShape = RECTANGLE; break;
-                        case SDLK_p: currentShape = POINT; break;
-                        case SDLK_c: currentShape = CIRCLE; break;
-                        case SDLK_g: generate_SDL_code(); break;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                case SDL_MOUSEBUTTONUP:
-                    if (event.type == SDL_MOUSEBUTTONDOWN) {
-                        shapeIndex = IsMouseOverShape(event);
-                    }
-                    if (event.type == SDL_MOUSEBUTTONUP) {
-                        shapeIndex = -1;  // Reset shape index on mouse button release
-                    }
+                        }
+                        break;
+                    case SDL_KEYDOWN:  // Handle keyboard input
+                        switch (event.key.keysym.sym) {
+                            case SDLK_x:  // Exit on 'x' key
+                                running = false;
+                                break;
+                            case SDLK_m: currentShape = MOVE; break;
+                            case SDLK_l: currentShape = LINE; break;
+                            case SDLK_r: currentShape = RECTANGLE; break;
+                            case SDLK_p: currentShape = POINT; break;
+                            case SDLK_c: currentShape = CIRCLE; break;
+                            case SDLK_g: generate_SDL_code(); break;
+                        }
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                        if (event.type == SDL_MOUSEBUTTONDOWN) {
+                            shapeIndex = IsMouseOverShape(event);
+                        }
+                        if (event.type == SDL_MOUSEBUTTONUP) {
+                            shapeIndex = -1;  // Reset shape index on mouse button release
+                        }
 
-                    // Update shape data and draw if necessary
-                    if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
-                        // Draw on savedBuffer texture
-                        SDL_SetRenderTarget(renderer, savedBuffer);
-                        DrawShape(renderer, currentShape, &shapeData, shapeIndex);
+                        // Update shape data and draw if necessary
+                        if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
+                            // Draw on savedBuffer texture
+                            SDL_SetRenderTarget(renderer, savedBuffer);
+                            DrawShape(renderer, currentShape, &shapeData, shapeIndex);
 
-                        // If not moving, save the shape and render the updated buffer
-                        if (currentShape != MOVE) {
-                            SaveShape(currentShape, &shapeData);
-                            SDL_SetRenderTarget(renderer, NULL);
+                            // If not moving, save the shape and render the updated buffer
+                            if (currentShape != MOVE) {
+                                SaveShape(currentShape, &shapeData);
+                                SDL_SetRenderTarget(renderer, NULL);
+                                SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
+                                SDL_RenderPresent(renderer);
+                            }
+                        }
+                        break;
+
+                    case SDL_MOUSEMOTION:
+                        // Change cursor if mouse is over a shape
+                        if (IsMouseOverShape(event) >= 0) {
+                            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND));  // Set to hand cursor
+                        } else {
+                            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));  // Reset to arrow cursor
+                        }
+                        // Update shape data for drawing preview
+                        if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
                             SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
+                            DrawShape(renderer, currentShape, &shapeData, shapeIndex);
                             SDL_RenderPresent(renderer);
                         }
-                    }
-                    break;
-
-                case SDL_MOUSEMOTION:
-                    // Change cursor if mouse is over a shape
-                    if (IsMouseOverShape(event) >= 0) {
-                        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND));  // Set to hand cursor
-                    } else {
-                        SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));  // Reset to arrow cursor
-                    }
-                    // Update shape data for drawing preview
-                    if (UpdateShapeData(currentShape, &shapeData, event, shapeIndex, renderer, savedBuffer) != NONE) {
-                        SDL_RenderCopy(renderer, savedBuffer, NULL, NULL);
-                        DrawShape(renderer, currentShape, &shapeData, shapeIndex);
-                        SDL_RenderPresent(renderer);
-                    }
-                    break;
+                        break;
+                }
             }
         }
     }
